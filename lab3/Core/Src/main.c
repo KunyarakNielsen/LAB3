@@ -49,13 +49,13 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-uint32_t InputCaptureBuffer[IC_BUFFER_SIZE];
+uint32_t InputCaptureBuffer[IC_BUFFER_SIZE]; //size 20
 float averageRisingedgePeriod;
-uint32_t duty = 500;
+uint32_t duty = 500; //Duty cycle start at 500 = 5%
 float MotorReadRPM;
 float MotorSetDuty;
-float MotorSetRPM = 0;
-uint32_t MotorControlEnable = 0;
+float MotorSetRPM = 0; //RPM start at 0
+uint32_t MotorControlEnable = 0; //start at mode 0
 
 /* USER CODE END PV */
 
@@ -111,12 +111,11 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 
 //start timer
-	HAL_TIM_Base_Start(&htim2);
-	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, InputCaptureBuffer,
-			IC_BUFFER_SIZE);
+	HAL_TIM_Base_Start(&htim2); //start timer 2
+	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, InputCaptureBuffer,IC_BUFFER_SIZE); //channel 1 Capture
 
-	HAL_TIM_Base_Start(&htim1);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_Base_Start(&htim1); //start timer 1
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); //PWM change volt
 
 	/* USER CODE END 2 */
 
@@ -127,41 +126,37 @@ int main(void) {
 
 		/* USER CODE BEGIN 3 */
 
-		/*	  //blink LED
-
-		 //use _HAL_TIM_GET_COUNTER(&htim2) like _Hal_getTick
-		 static uint32_t timestamp = 0;
-		 if(timestamp <= _HAL_TIM_GET_COUNTER(&htim2))
-		 {
-		 timestamp += 500000;
-		 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-		 }
-		 */
 
 		static uint32_t timestamp = 0;
-		if (HAL_GetTick() >= timestamp) {
-			if (MotorControlEnable == 0){
-			duty = 10 * MotorSetDuty;
+		if (HAL_GetTick() >= timestamp)
+		{
+			if (MotorControlEnable == 0)
+				// Mode controlEnable = 0
+			{
+			duty = 10 * MotorSetDuty; //set gain motorsetduty to same at period
 			}
-			else if (MotorControlEnable == 1) {
-				if (MotorSetRPM*0.95 > MotorReadRPM) {
-					duty = (duty + 10)%1000;
+			else if (MotorControlEnable == 1) //mode 1
+			{
+				if (MotorSetRPM*0.95 > MotorReadRPM) //if RPM set more than now add more duty set 5% tolerance
+				{
+					duty = (duty + 10)%1000; //if duty more than 1000 drop with mod 1000 if 1200 = 200
 
 				}
 
-				else if (MotorSetRPM*1.05 < MotorReadRPM) {
+				else if (MotorSetRPM*1.05 < MotorReadRPM) //if RPM set less than now drop duty set 5% tolerance
+				{
 					duty = (duty - 10)%1000;
 
 				}
 
 			}
-			timestamp = HAL_GetTick() + 500;
+			timestamp = HAL_GetTick() + 500; //delay 2 Hz
 			averageRisingedgePeriod = IC_Calc_Period();
 
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty); //
 
 			MotorReadRPM = (60 * 1000000) / (averageRisingedgePeriod * 12 * 64);
+			//(1pulse/micro sec)*(1 rev./12pulse)*(1/averageRisingedgePeriod)*(1/64 gear ratio)*(60 min)=rpm
 
 		}
 
@@ -416,7 +411,8 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 
-float IC_Calc_Period() {
+float IC_Calc_Period() //capture
+{
 	uint32_t currentDMAPointer = IC_BUFFER_SIZE
 			- __HAL_DMA_GET_COUNTER((htim2.hdma[1]));
 	uint32_t lastVaildDMAPointer = (currentDMAPointer - 1 + IC_BUFFER_SIZE)

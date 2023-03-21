@@ -1183,42 +1183,44 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 
 //start timer
-	HAL_TIM_Base_Start(&htim2);
+	HAL_TIM_Base_Start(&htim2); //start timer 2
  8000e48:	4859      	ldr	r0, [pc, #356]	; (8000fb0 <main+0x188>)
  8000e4a:	f002 f897 	bl	8002f7c <HAL_TIM_Base_Start>
-	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, InputCaptureBuffer,
+	HAL_TIM_IC_Start_DMA(&htim2, TIM_CHANNEL_1, InputCaptureBuffer,IC_BUFFER_SIZE); //channel 1 Capture
  8000e4e:	2314      	movs	r3, #20
  8000e50:	4a58      	ldr	r2, [pc, #352]	; (8000fb4 <main+0x18c>)
  8000e52:	2100      	movs	r1, #0
  8000e54:	4856      	ldr	r0, [pc, #344]	; (8000fb0 <main+0x188>)
  8000e56:	f002 fa4f 	bl	80032f8 <HAL_TIM_IC_Start_DMA>
-			IC_BUFFER_SIZE);
 
-	HAL_TIM_Base_Start(&htim1);
+	HAL_TIM_Base_Start(&htim1); //start timer 1
  8000e5a:	4857      	ldr	r0, [pc, #348]	; (8000fb8 <main+0x190>)
  8000e5c:	f002 f88e 	bl	8002f7c <HAL_TIM_Base_Start>
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); //PWM change volt
  8000e60:	2100      	movs	r1, #0
  8000e62:	4855      	ldr	r0, [pc, #340]	; (8000fb8 <main+0x190>)
  8000e64:	f002 f93e 	bl	80030e4 <HAL_TIM_PWM_Start>
 
-		 }
-		 */
+		/* USER CODE BEGIN 3 */
+
 
 		static uint32_t timestamp = 0;
-		if (HAL_GetTick() >= timestamp) {
+		if (HAL_GetTick() >= timestamp)
  8000e68:	f000 fd74 	bl	8001954 <HAL_GetTick>
  8000e6c:	4602      	mov	r2, r0
  8000e6e:	4b53      	ldr	r3, [pc, #332]	; (8000fbc <main+0x194>)
  8000e70:	681b      	ldr	r3, [r3, #0]
  8000e72:	429a      	cmp	r2, r3
  8000e74:	d3f8      	bcc.n	8000e68 <main+0x40>
-			if (MotorControlEnable == 0){
+		{
+			if (MotorControlEnable == 0)
  8000e76:	4b52      	ldr	r3, [pc, #328]	; (8000fc0 <main+0x198>)
  8000e78:	681b      	ldr	r3, [r3, #0]
  8000e7a:	2b00      	cmp	r3, #0
  8000e7c:	d10d      	bne.n	8000e9a <main+0x72>
-			duty = 10 * MotorSetDuty;
+				// Mode controlEnable = 0
+			{
+			duty = 10 * MotorSetDuty; //set gain motorsetduty to same at period
  8000e7e:	4b51      	ldr	r3, [pc, #324]	; (8000fc4 <main+0x19c>)
  8000e80:	edd3 7a00 	vldr	s15, [r3]
  8000e84:	eeb2 7a04 	vmov.f32	s14, #36	; 0x41200000  10.0
@@ -1229,12 +1231,13 @@ int main(void) {
  8000e96:	601a      	str	r2, [r3, #0]
  8000e98:	e05a      	b.n	8000f50 <main+0x128>
 			}
-			else if (MotorControlEnable == 1) {
+			else if (MotorControlEnable == 1) //mode 1
  8000e9a:	4b49      	ldr	r3, [pc, #292]	; (8000fc0 <main+0x198>)
  8000e9c:	681b      	ldr	r3, [r3, #0]
  8000e9e:	2b01      	cmp	r3, #1
  8000ea0:	d156      	bne.n	8000f50 <main+0x128>
-				if (MotorSetRPM*0.95 > MotorReadRPM) {
+			{
+				if (MotorSetRPM*0.95 > MotorReadRPM) //if RPM set more than now add more duty set 5% tolerance
  8000ea2:	4b4a      	ldr	r3, [pc, #296]	; (8000fcc <main+0x1a4>)
  8000ea4:	681b      	ldr	r3, [r3, #0]
  8000ea6:	4618      	mov	r0, r3
@@ -1258,7 +1261,8 @@ int main(void) {
  8000ed4:	4603      	mov	r3, r0
  8000ed6:	2b00      	cmp	r3, #0
  8000ed8:	d00f      	beq.n	8000efa <main+0xd2>
-					duty = (duty + 10)%1000;
+				{
+					duty = (duty + 10)%1000; //if duty more than 1000 drop with mod 1000 if 1200 = 200
  8000eda:	4b3b      	ldr	r3, [pc, #236]	; (8000fc8 <main+0x1a0>)
  8000edc:	681b      	ldr	r3, [r3, #0]
  8000ede:	f103 020a 	add.w	r2, r3, #10
@@ -1274,7 +1278,7 @@ int main(void) {
 
 				}
 
-				else if (MotorSetRPM*1.05 < MotorReadRPM) {
+				else if (MotorSetRPM*1.05 < MotorReadRPM) //if RPM set less than now drop duty set 5% tolerance
  8000efa:	4b34      	ldr	r3, [pc, #208]	; (8000fcc <main+0x1a4>)
  8000efc:	681b      	ldr	r3, [r3, #0]
  8000efe:	4618      	mov	r0, r3
@@ -1298,6 +1302,7 @@ int main(void) {
  8000f2c:	4603      	mov	r3, r0
  8000f2e:	2b00      	cmp	r3, #0
  8000f30:	d00e      	beq.n	8000f50 <main+0x128>
+				{
 					duty = (duty - 10)%1000;
  8000f32:	4b25      	ldr	r3, [pc, #148]	; (8000fc8 <main+0x1a0>)
  8000f34:	681b      	ldr	r3, [r3, #0]
@@ -1314,7 +1319,7 @@ int main(void) {
 				}
 
 			}
-			timestamp = HAL_GetTick() + 500;
+			timestamp = HAL_GetTick() + 500; //delay 2 Hz
  8000f50:	f000 fd00 	bl	8001954 <HAL_GetTick>
  8000f54:	4603      	mov	r3, r0
  8000f56:	f503 73fa 	add.w	r3, r3, #500	; 0x1f4
@@ -1326,7 +1331,7 @@ int main(void) {
  8000f66:	4b1c      	ldr	r3, [pc, #112]	; (8000fd8 <main+0x1b0>)
  8000f68:	edc3 7a00 	vstr	s15, [r3]
 
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty); //
  8000f6c:	4b12      	ldr	r3, [pc, #72]	; (8000fb8 <main+0x190>)
  8000f6e:	681b      	ldr	r3, [r3, #0]
  8000f70:	4a15      	ldr	r2, [pc, #84]	; (8000fc8 <main+0x1a0>)
@@ -2092,7 +2097,8 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 
-float IC_Calc_Period() {
+float IC_Calc_Period() //capture
+{
  8001448:	b580      	push	{r7, lr}
  800144a:	b086      	sub	sp, #24
  800144c:	af00      	add	r7, sp, #0
