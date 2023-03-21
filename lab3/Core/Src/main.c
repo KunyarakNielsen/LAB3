@@ -51,7 +51,8 @@ UART_HandleTypeDef huart2;
 
 uint32_t InputCaptureBuffer[IC_BUFFER_SIZE];
 float averageRisingedgePeriod;
-uint32_t duty = 50;
+uint32_t MotorSetDuty = 50;
+float MotorReadRPM;
 
 /* USER CODE END PV */
 
@@ -143,8 +144,12 @@ int main(void)
 		  timestamp = HAL_GetTick()+500;
 		  averageRisingedgePeriod = IC_Calc_Period();
 
-		  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,duty);
+		  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,MotorSetDuty);
+
+		  MotorReadRPM = (60 * 1000000)/(IC_Calc_Period()* 12*64);
+
 	  }
+
 
   }
   /* USER CODE END 3 */
@@ -243,7 +248,7 @@ static void MX_TIM1_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 50;
+  sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
